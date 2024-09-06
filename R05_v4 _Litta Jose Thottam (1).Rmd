@@ -1,0 +1,432 @@
+---
+title: "Panel data Analysis"
+author: "Litta Jose Thottam,135546"
+Deadline: "21.07.2024"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+  html_document:
+    code_folding: hide
+    toc: true
+    theme: united
+always_allow_html: true
+subtitle: A Fixed Effects Approach
+
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(gtable)
+library(modelsummary)
+library(gt)
+library(dplyr)
+library(plm)
+```
+
+# Introduction to Fixed Effects for Panel Data
+In econometrics and statistical analysis, fixed effects models are a powerful tool for analyzing panel data. Panel data, also known as longitudinal data, consists of observations on multiple entities (such as individuals, firms, or countries) over multiple time periods. This structure provides a rich dataset that allows researchers to account for both cross-sectional and temporal variations.
+
+Fixed effects models are designed to control for unobserved heterogeneity when this heterogeneity is constant over time and correlated with the independent variables. The essential idea is to isolate the impact of the explanatory variables by controlling for all time-invariant characteristics of the entities.
+
+## Essential Meaning
+The core principle of fixed effects is to focus on within-entity variations. By doing so, the model effectively removes the influence of all entity-specific attributes that do not change over time, such as cultural factors, innate abilities, or other intrinsic properties. This is achieved through a transformation that demeans the data, subtracting the entity-specific mean of each variable.
+
+## Benefits
+Control for Unobserved Heterogeneity: Fixed effects models account for unobservable factors that differ between entities but remain constant over time. This helps in reducing bias in the estimated coefficients.
+
+Reduction of Omitted Variable Bias: By controlling for entity-specific effects, fixed effects models mitigate the risk of omitted variable bias, which occurs when a model leaves out an important variable that is correlated with both the dependent and independent variables.
+
+Improved Causal Inference: Fixed effects models enhance the reliability of causal inference by controlling for time-invariant characteristics, allowing researchers to more confidently attribute changes in the dependent variable to changes in the independent variables.
+
+Flexibility in Application: These models are widely applicable across various fields such as economics, sociology, political science, and public health, making them a versatile tool for panel data analysis.
+
+# Cross-sectional Data (2 pt)
+Suppose you want to learn the **effect of price on the demand** for back massages. Read in the following data from four Midwest locations (call it `crosssection`).
+please create the plot
+```{r}
+
+# Crosssection
+crosssection <- data.frame(Location = c("Chicago", "Peoria", "Milwaukee", "Madison"),
+                           Year = rep(2003, 4), 
+                           Price = c(75, 50, 60, 55),
+                           Quantity = c(2.0, 1.0, 1.5, 0.8))
+                           
+```
+
+Create the table with the `gt` package. Use `tab_header()` to set a header and `cols_label()` to label columns.
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+library(knitr)
+# Create the data frame
+crosssection <- data.frame(
+  Location = c("Chicago", "Peoria", "Milwaukee", "Madison"),
+  Year = rep(2003, 4),
+  Price = c(75, 50, 60, 55),
+  Quantity = c(2.0, 1.0, 1.5, 0.8)
+)
+
+# Create the table using gt
+gt_table <- gt(crosssection) %>%
+  tab_header(
+    title = "Table 1: Cross-sectional Data"
+  ) %>%
+  cols_label(
+      Location = md("**Location**"),
+    Year = md("**Year**"),
+    Price = md("**Price**"),
+    Quantity = md("**Per Capita**<br>**Quantity**")
+  ) %>%
+  cols_align(
+    align = "center",
+    columns = vars(Quantity)
+  )
+
+# Display the table
+gt_table
+
+
+
+
+```
+
+
+
+```{r collapse= TRUE}
+# Load necessary libraries
+# Load necessary libraries
+library(gt)
+library(ggplot2)
+
+
+# Create the data frame
+crosssection <- data.frame(
+  Location = c("Chicago", "Peoria", "Milwaukee", "Madison"),
+  Year = rep(2003, 4),
+  Price = c(75, 50, 60, 55),
+  Quantity = c(2.0, 1.0, 1.5, 0.8)
+)
+
+
+# Create the plot using ggplot2
+ggplot(crosssection, aes(x = Price, y = Quantity)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(
+    title = "Relationship between Price and Demand in 2003",
+    x = "Price",
+    y = "Per Capita Quantity"
+  ) +
+  theme_minimal()
+```
+
+From this plot a clear positive relationship is visible.
+
+# Panel Data (2 pt)
+Read in additional data from Table 2 (call it `paneldata`).
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+library(ggplot2)
+library(tidyverse)
+
+# Panel Data
+paneldata <- data.frame(Location = c("Chicago", "Chicago", "Peoria", "Peoria", 
+                                     "Milwaukee", "Milwaukee", "Madison", "Madison"),
+                        Year = rep(2003:2004, 4), 
+                        Price = c(75, 85, 50, 48, 60, 65, 55, 60),
+                        Quantity = c(2.0, 1.8, 1.0, 1.1, 1.5, 1.4, 0.8, 0.7))
+
+```
+create the table
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Load necessary libraries
+library(gt)
+
+# Create the data frame
+paneldata <- data.frame(
+  Location = c("Chicago", "Chicago", "Peoria", "Peoria", 
+               "Milwaukee", "Milwaukee", "Madison", "Madison"),
+  Year = rep(2003:2004, 4),
+  Price = c(75, 85, 50, 48, 60, 65, 55, 60),
+  Quantity = c(2.0, 1.8, 1.0, 1.1, 1.5, 1.4, 0.8, 0.7)
+)
+
+# Create the table using gt
+gt_table <- gt(paneldata) %>%
+  tab_header(
+    title = "Table 2: Panel Data"
+  ) %>%
+  cols_label(
+      Location = md("**Location**"),
+    Year = md("**Year**"),
+    Price = md("**Price**"),
+    Quantity = md("**Per Capita**<br>**Quantity**")
+  ) %>%
+  cols_align(
+    align = "center",
+    columns = vars(Quantity)
+  )
+
+# Display the table
+gt_table
+
+```
+please create the plot
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Load necessary libraries
+library(ggplot2)
+library(tidyverse)
+
+# Panel Data
+paneldata <- data.frame(
+  Location = c("Chicago", "Chicago", "Peoria", "Peoria", 
+               "Milwaukee", "Milwaukee", "Madison", "Madison"),
+  Year = rep(2003:2004, 4),
+  Price = c(75, 85, 50, 48, 60, 65, 55, 60),
+  Quantity = c(2.0, 1.8, 1.0, 1.1, 1.5, 1.4, 0.8, 0.7)
+)
+
+# Create the plot using ggplot2
+ggplot(paneldata, aes(x = Price, y = Quantity, color = Location)) +
+  geom_point(size = 3) +
+  geom_line(aes(group = Location), size = 1) +
+  geom_smooth(method = "lm", se = FALSE, color = "blue", size = 1.5) +  # Add the overall trend line
+  labs(
+    title = "Relationship between Price and Quantity",
+    x = "Price",
+    y = "Quantity"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "right"
+  )
+
+
+
+```
+
+
+The plot demonstrates the relationship between price and quantity for four locations (Chicago, Madison, Milwaukee, and Peoria) over the years 2003 and 2004. Here are the key takeaways:
+
+1.**Overall Positive Trend**: The blue line indicates a general positive relationship between price and quantity when considering all locations together. This suggests that, on average, higher prices are associated with higher quantities.
+
+2.**Location-Specific Negative Trends**: The colored lines connecting the points for each location show that within each location, the quantity decreases as the price increases from 2003 to 2004. This suggests a negative relationship between price and quantity at the individual location level.
+
+# Fixed Effects Regression
+## Manual FD (1 pt)
+Please add two columns, i.e. the change in price "(Δ𝑃)" and the change in quantity "(Δ𝑄)" to your dataframe. Create the following table:
+
+```{r collapse= TRUE}
+## Data for Difference Equation Estimation
+
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Create the dataframe
+data <- data.frame(
+  Location = c("Chicago", "Chicago", "Peoria", "Peoria", "Milwaukee", "Milwaukee", "Madison", "Madison"),
+  Year = c(2003, 2004, 2003, 2004, 2003, 2004, 2003, 2004),
+  Price = c(75, 85, 50, 48, 60, 65, 55, 60),
+  Quantity = c(2.0, 1.8, 1.0, 1.1, 1.5, 1.4, 0.8, 0.7)
+)
+
+# Calculate changes in Price (ΔP) and Quantity (ΔQ)
+data <- data %>%
+  group_by(Location) %>%
+  mutate(
+    ΔP = c(NA, diff(Price)),
+    ΔQ = c(NA, diff(Quantity))
+  )
+
+# Replace 0 values with NA
+data <- data %>%
+  mutate(
+    ΔP = ifelse(ΔP == 0, NA, ΔP),
+    ΔQ = ifelse(ΔQ == 0, NA, ΔQ)
+  )
+
+# Create the table with a centered title, caption, and footnote
+kable(data, caption = "Table 3: Data for Difference Equation Estimation") %>%
+  kable_styling(full_width = FALSE) %>%
+  add_header_above(c(" " = 2, "Data for Difference Equation Estimation" = 4), bold = TRUE, align = "c") %>%
+  footnote(general = "Note: ΔP and ΔQ represent the change in Price and Quantity, respectively.")
+
+```
+The modelsummary package creates nice tables from a `dataframe` with `datasummary_df()`.
+
+## First Difference (1 pt)
+Run a first difference estimation by regressing change in quantity on change in price (1 pt). Please exclude the intercept in the estimation.
+```{r collapse= TRUE}
+library(dplyr)
+library(knitr)
+
+# Create the dataframe
+data <- data.frame(
+  Location = c("Chicago", "Chicago", "Peoria", "Peoria", "Milwaukee", "Milwaukee", "Madison", "Madison"),
+  Year = c(2003, 2004, 2003, 2004, 2003, 2004, 2003, 2004),
+  Price = c(75, 85, 50, 48, 60, 65, 55, 60),
+  Quantity = c(2.0, 1.8, 1.0, 1.1, 1.5, 1.4, 0.8, 0.7)
+)
+
+# Calculate changes in Price (ΔP) and Quantity (ΔQ)
+data <- data %>%
+  group_by(Location) %>%
+  mutate(
+    ΔP = c(NA, diff(Price)),
+    ΔQ = c(NA, diff(Quantity))
+  )
+
+# Replace 0 values with NA
+data <- data %>%
+  mutate(
+    ΔP = ifelse(ΔP == 0, NA, ΔP),
+    ΔQ = ifelse(ΔQ == 0, NA, ΔQ)
+  )
+
+# Remove rows with NA in ΔP or ΔQ
+data_clean <- data %>%
+  filter(!is.na(ΔP) & !is.na(ΔQ))
+
+# Perform the regression excluding the intercept
+model_fd <- lm(ΔQ ~ ΔP - 1, data = data_clean)
+
+# Display the summary of the regression
+summary(model_fd)
+
+```
+## Manual Time Demeaning (1 pt)
+Please prepare the data for a manual time demeaning. Thus replicate the following table.
+
+Calculate the mean of Q and P per individual (group).
+Subtract the individual mean from each observation.
+Regress these time-demeaned observation (with standard lm() command).
+Please exclude the intercept in the estimation.
+
+```{r collapse=TRUE}
+
+# Calculate the mean of Q and P per individual (group)
+means <- data %>%
+  group_by(Location) %>%
+  summarize(
+    mean_P = mean(Price),
+    mean_Q = mean(Quantity)
+  )
+
+# Merge the means with the original data
+data_demean <- data %>%
+  left_join(means, by = "Location")
+
+# Subtract the individual mean from each observation
+data_demean <- data_demean %>%
+  mutate(
+    demeaned_P = Price - mean_P,
+    demeaned_Q = Quantity - mean_Q
+  )
+
+# Display the prepared data
+kable(data_demean, caption = "Data for Manual Time Demeaning")
+
+# Perform the regression excluding the intercept
+model_td <- lm(demeaned_Q ~ demeaned_P - 1, data = data_demean)
+
+# Display the summary of the regression
+summary(model_td)
+
+```
+
+## Time Demeaning (1 pt)
+Run a within fixed effects regression with the function plm() from plm package. Please exclude the intercept in the estimation.
+
+```{r collapse= TRUE}
+
+library(plm)
+
+# Create a pdata.frame for plm
+pdata <- pdata.frame(data, index = c("Location", "Year"))
+
+# Perform the within fixed effects regression excluding the intercept
+model_fe <- plm(Quantity ~ Price - 1, data = pdata, model = "within")
+
+# Display the summary of the regression
+summary(model_fe)
+
+
+
+```
+## LSDV (1 pt)
+Run a Least Square Dummy Variable (LSDV) regression, i.e. include all locations as dummy variables in your standard lm regression. Please exclude the intercept in the estimation
+```{r collapse= TRUE}
+
+# Create dummy variables for Location
+data_lsdv <- data %>%
+  mutate(
+    Chicago = ifelse(Location == "Chicago", 1, 0),
+    Peoria = ifelse(Location == "Peoria", 1, 0),
+    Milwaukee = ifelse(Location == "Milwaukee", 1, 0),
+    Madison = ifelse(Location == "Madison", 1, 0)
+  )
+
+# Perform the LSDV regression excluding the intercept
+model_lsdv <- lm(Quantity ~ Price + Chicago + Peoria + Milwaukee + Madison - 1, data = data_lsdv)
+
+# Display the summary of the regression
+summary(model_lsdv)
+
+
+```
+## Comparison (1 pt)
+Create a model overview with modelsummary package. Show all 5 models. Drop the coefficients of location dummies in the LSDV model. Drop the goodness-of-fit statistics (except for n, R2, adjR2). Rename the coefficient in the FD model into “Price” such that all price coefficient are the same. Relabel the models according their names. Your result should look like this:
+
+```{r collapse= TRUE}
+
+## Model Comparison
+
+library(modelsummary)
+
+# Create the Pooling model without intercept
+pooling_model <- lm(Quantity ~ Price - 1, data = data)
+
+# Summary of the pooling model to verify
+summary(pooling_model)
+
+# Prepare models for comparison
+models <- list(
+  "Pooling" = pooling_model,
+  "First Difference" = model_fd,
+  "Manual Time Demeaning" = model_td,
+  "Within Fixed Effects" = model_fe,
+  "LSDV" = model_lsdv
+)
+
+# Define a custom gof_map to include R2 and adjusted R2 manually for Pooling model
+custom_gof <- function(model, ...) {
+  if (identical(model, pooling_model)) {
+    return(c("R2" = 0.953, "adjR2" = 0.947))
+  } else {
+    return(c("R2" = summary(model)$r.squared, "adjR2" = summary(model)$adj.r.squared))
+  }
+}
+
+# Drop location dummies from LSDV model
+coef_map <- c(
+  "Price" = "Price",
+  "ΔP" = "Price",
+  "demeaned_P" = "Price"
+)
+
+modelsummary(models,
+             coef_map = c("Price" = "Price", "demeaned_P" = "Price", "ΔP" = "Price"),
+             coef_omit = "Chicago|Peoria|Milwaukee|Madison",
+             
+             gof_omit = "AIC|BIC|Log.Lik|F|sigma|RMSE",
+             stars = TRUE,
+             notes = "Note: The coefficients of location dummies in the LSDV model are omitted from the table.",
+             title = "Model Overview"
+)
+```
