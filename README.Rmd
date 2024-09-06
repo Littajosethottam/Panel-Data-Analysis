@@ -4,5 +4,6 @@ In econometrics and statistical analysis, fixed effects models are a powerful to
 
 Fixed effects models are designed to control for unobserved heterogeneity when this heterogeneity is constant over time and correlated with the independent variables. The essential idea is to isolate the impact of the explanatory variables by controlling for all time-invariant characteristics of the entities.
 
-
 Taking the example of Law of demand,Project tries to find the fixed effect regression by various methods such as LSDV,Manual FD,First Difference,Manual Time Demeaning etc.
+
+Site Link:https://littajosethottam.github.io/Panel-Data-Analysis/
