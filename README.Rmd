@@ -1,0 +1,8 @@
+README
+
+In econometrics and statistical analysis, fixed effects models are a powerful tool for analyzing panel data. Panel data, also known as longitudinal data, consists of observations on multiple entities (such as individuals, firms, or countries) over multiple time periods. This structure provides a rich dataset that allows researchers to account for both cross-sectional and temporal variations.
+
+Fixed effects models are designed to control for unobserved heterogeneity when this heterogeneity is constant over time and correlated with the independent variables. The essential idea is to isolate the impact of the explanatory variables by controlling for all time-invariant characteristics of the entities.
+
+
+Taking the example of Law of demand,Project tries to find the fixed effect regression by various methods such as LSDV,Manual FD,First Difference,Manual Time Demeaning etc.
